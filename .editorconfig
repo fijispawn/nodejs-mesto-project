@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # http://editorconfig.org
 
 # A special property that should be specified at the top of the file outside of
@@ -23,11 +24,23 @@ charset = utf-8
 
 # Denotes whether to trim whitespace at the end of lines
 # Possible values - true, false
+=======
+root = true
+
+[*]
+indent_style = space
+indent_size = 2
+end_of_line = lf
+charset = utf-8
+>>>>>>> a59970c (first iteration)
 trim_trailing_whitespace = true
 
 [*.md]
 trim_trailing_whitespace = false
 
+<<<<<<< HEAD
 # Denotes whether file should end with a newline
 # Possible values - true, false
+=======
+>>>>>>> a59970c (first iteration)
 insert_final_newline = true
