@@ -1,8 +1,10 @@
-export default class UnauthorizedError extends Error {
+class UnauthorizedError extends Error {
   statusCode: number;
 
-  constructor(message: string) {
+  constructor(message = 'Необходима авторизация') {
     super(message);
     this.statusCode = 401;
   }
 }
+
+export default UnauthorizedError;

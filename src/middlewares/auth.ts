@@ -1,9 +1,10 @@
 import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
+import jwt, { JwtPayload } from "jsonwebtoken";
+import UnauthorizedError from "../errors/UnauthorizedError";
 
 const { JWT_SECRET = "default-secret" } = process.env;
 
-interface JwtPayload {
+interface CustomJwtPayload extends JwtPayload {
   _id: string;
 }
 
@@ -11,16 +12,16 @@ export default (req: Request, res: Response, next: NextFunction) => {
   const { authorization } = req.headers;
 
   if (!authorization || !authorization.startsWith("Bearer ")) {
-    return res.status(401).json({ message: "Необходима авторизация" });
+    return next(new UnauthorizedError("Необходима авторизация"));
   }
 
   const token = authorization.replace("Bearer ", "");
 
   try {
-    const payload = jwt.verify(token, JWT_SECRET) as JwtPayload;
+    const payload = jwt.verify(token, JWT_SECRET) as CustomJwtPayload;
     req.user = payload;
     return next();
   } catch (err) {
-    return res.status(401).json({ message: "Неверный токен" });
+    return next(new UnauthorizedError("Неверный токен"));
   }
 };

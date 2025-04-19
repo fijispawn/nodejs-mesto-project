@@ -1,11 +1,10 @@
-import { ObjectId } from 'mongoose';
+import { ObjectId } from "mongoose";
+import { Request } from "express";
 
-declare global {
-  namespace Express {
-    interface Request {
-      user?: {
-        _id: string | ObjectId;
-      };
-    }
+declare module "express-serve-static-core" {
+  interface Request {
+    user?: {
+      _id: string | ObjectId;
+    };
   }
 }

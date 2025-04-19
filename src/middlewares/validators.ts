@@ -1,7 +1,5 @@
-import { Joi, celebrate, Segments } from "celebrate";
-
-const urlRegex =
-  /^https?:\/\/(www\.)?[\w-]+\.[\w]{2,}([/\w\-._~:/?#[\]@!$&'()*+,;=]*)#?$/;
+import { celebrate, Joi, Segments } from "celebrate";
+import { urlRegex } from "../utils/constants";
 
 export const validateSignup = celebrate({
   [Segments.BODY]: Joi.object().keys({
@@ -26,8 +24,15 @@ export const validateUserId = celebrate({
   }),
 });
 
+export const validateCardCreate = celebrate({
+  [Segments.BODY]: Joi.object().keys({
+    name: Joi.string().required().min(2).max(30),
+    link: Joi.string().required().pattern(urlRegex),
+  }),
+});
+
 export const validateCardId = celebrate({
   [Segments.PARAMS]: Joi.object().keys({
-    cardId: Joi.string().hex().length(24),
+    cardId: Joi.string().length(24).hex().required(),
   }),
 });

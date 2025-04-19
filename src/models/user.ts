@@ -7,7 +7,7 @@ const userSchema = new mongoose.Schema({
     required: true,
     unique: true,
     validate: {
-      validator: validator.isEmail,
+      validator: (v: string) => validator.isEmail(v),
       message: "Некорректный email",
     },
   },
@@ -41,3 +41,5 @@ const userSchema = new mongoose.Schema({
     },
   },
 });
+
+export default mongoose.model("user", userSchema);
