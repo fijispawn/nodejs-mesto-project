@@ -1,28 +1,43 @@
-import mongoose, { Document, Schema } from "mongoose";
+import validator from "validator";
+import mongoose from "mongoose";
 
-export interface IUser extends Document {
-  name: string;
-  about: string;
-  avatar: string;
-}
-
-const userSchema = new Schema<IUser>({
-  name: {
+const userSchema = new mongoose.Schema({
+  email: {
     type: String,
     required: true,
+    unique: true,
+    validate: {
+      validator: validator.isEmail,
+      message: "Некорректный email",
+    },
+  },
+  password: {
+    type: String,
+    required: true,
+    select: false,
+  },
+  name: {
+    type: String,
+    default: "Жак-Ив Кусто",
     minlength: 2,
     maxlength: 30,
   },
   about: {
     type: String,
-    required: true,
+    default: "Исследователь",
     minlength: 2,
     maxlength: 200,
   },
   avatar: {
     type: String,
-    required: true,
+    default: "https://pictures.s3.yandex.net/resources/avatar_1604080799.jpg",
+    validate: {
+      validator(v: string) {
+        return /^https?:\/\/(www\.)?[\w-]+\.[\w]{2,}([/\w\-._~:/?#[\]@!$&'()*+,;=]*)#?$/.test(
+          v
+        );
+      },
+      message: "Некорректный URL аватара",
+    },
   },
 });
-
-export default mongoose.model<IUser>("user", userSchema);
