@@ -30,12 +30,6 @@ app.use(express.json());
 
 app.use(requestLogger);
 
-app.get("/crash-test", (_req: Request, _res: Response) => {
-  setTimeout(() => {
-    throw new Error("Сервер сейчас упадёт");
-  }, 0);
-});
-
 app.post("/signup", validateSignup, createUser);
 app.post("/signin", validateSignin, login);
 
