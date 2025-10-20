@@ -8,7 +8,10 @@ interface CustomJwtPayload extends JwtPayload {
   _id: string;
 }
 
-export default (req: Request, res: Response, next: NextFunction) => {
+// Локальный тип запроса с user
+type AuthedRequest = Request & { user?: { _id: string } };
+
+export default (req: AuthedRequest, _res: Response, next: NextFunction) => {
   const { authorization } = req.headers;
 
   if (!authorization || !authorization.startsWith("Bearer ")) {
@@ -19,9 +22,9 @@ export default (req: Request, res: Response, next: NextFunction) => {
 
   try {
     const payload = jwt.verify(token, JWT_SECRET) as CustomJwtPayload;
-    req.user = payload;
+    req.user = { _id: payload._id };
     return next();
-  } catch (err) {
+  } catch {
     return next(new UnauthorizedError("Неверный токен"));
   }
 };

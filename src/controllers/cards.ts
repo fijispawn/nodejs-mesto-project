@@ -1,16 +1,20 @@
 import { Request, Response, NextFunction } from "express";
+import mongoose from "mongoose";
 import Card from "../models/card";
 import BadRequestError from "../errors/BadRequestError";
-import NotFoundError from "../errors/NotFoundError";
 import ForbiddenError from "../errors/ForbiddenError";
+import NotFoundError from "../errors/NotFoundError";
+
+// Локальный тип запроса с user (как в users.ts)
+type AuthedRequest = Request & { user?: { _id: string } };
 
 export const getCards = async (
-  req: Request,
+  _req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const cards = await Card.find({});
+    const cards = await Card.find({}).populate(["owner", "likes"]);
     res.status(200).json(cards);
   } catch (err) {
     next(err);
@@ -18,7 +22,7 @@ export const getCards = async (
 };
 
 export const createCard = async (
-  req: Request,
+  req: AuthedRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -41,77 +45,84 @@ export const createCard = async (
 };
 
 export const deleteCard = async (
-  req: Request,
+  req: AuthedRequest,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const card = await Card.findById(req.params.cardId);
+    const { cardId } = req.params;
 
-    if (!card) {
-      return next(new NotFoundError("Карточка не найдена"));
+    if (!mongoose.isValidObjectId(cardId)) {
+      throw new BadRequestError("Некорректный ID карточки");
     }
 
-    if (card.owner.toString() !== req.user?._id) {
-      return next(new ForbiddenError("Нельзя удалять чужую карточку"));
+    const card = await Card.findById(cardId);
+    if (!card) {
+      throw new NotFoundError("Карточка не найдена");
+    }
+
+    // Сравниваем как строки, чтобы не споткнуться о ObjectId
+    const isOwner = String(card.owner) === String(req.user?._id);
+
+    if (!isOwner) {
+      throw new ForbiddenError("Нельзя удалить чужую карточку");
     }
 
     await card.deleteOne();
     res.status(200).json({ message: "Карточка удалена" });
-  } catch (err: any) {
-    if (err.name === "CastError") {
-      return next(new BadRequestError("Некорректный ID карточки"));
-    }
+  } catch (err) {
     next(err);
   }
 };
 
 export const likeCard = async (
-  req: Request,
+  req: AuthedRequest,
   res: Response,
   next: NextFunction
 ) => {
   try {
+    const { cardId } = req.params;
+
+    if (!mongoose.isValidObjectId(cardId)) {
+      throw new BadRequestError("Некорректный ID карточки");
+    }
+
     const card = await Card.findByIdAndUpdate(
-      req.params.cardId,
+      cardId,
       { $addToSet: { likes: req.user?._id } },
       { new: true }
-    );
+    ).populate(["owner", "likes"]);
 
-    if (!card) {
-      return next(new NotFoundError("Карточка не найдена"));
-    }
+    if (!card) throw new NotFoundError("Карточка не найдена");
 
     res.status(200).json(card);
-  } catch (err: any) {
-    if (err.name === "CastError") {
-      return next(new BadRequestError("Некорректный ID карточки"));
-    }
+  } catch (err) {
     next(err);
   }
 };
 
 export const dislikeCard = async (
-  req: Request,
+  req: AuthedRequest,
   res: Response,
   next: NextFunction
 ) => {
   try {
+    const { cardId } = req.params;
+
+    if (!mongoose.isValidObjectId(cardId)) {
+      throw new BadRequestError("Некорректный ID карточки");
+    }
+
     const card = await Card.findByIdAndUpdate(
-      req.params.cardId,
+      cardId,
       { $pull: { likes: req.user?._id } },
       { new: true }
-    );
+    ).populate(["owner", "likes"]);
 
-    if (!card) {
-      return next(new NotFoundError("Карточка не найдена"));
-    }
+    if (!card) throw new NotFoundError("Карточка не найдена");
 
     res.status(200).json(card);
-  } catch (err: any) {
-    if (err.name === "CastError") {
-      return next(new BadRequestError("Некорректный ID карточки"));
-    }
+  } catch (err) {
     next(err);
   }
 };

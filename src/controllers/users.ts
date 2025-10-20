@@ -8,8 +8,11 @@ import UnauthorizedError from "../errors/UnauthorizedError";
 
 const { JWT_SECRET = "default-secret" } = process.env;
 
+// Локальный тип запроса с user
+type AuthedRequest = Request & { user?: { _id: string } };
+
 export const getUsers = async (
-  req: Request,
+  _req: Request,
   res: Response,
   next: NextFunction
 ) => {
@@ -41,7 +44,7 @@ export const getUserById = async (
 };
 
 export const getCurrentUser = async (
-  req: Request,
+  req: AuthedRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -74,9 +77,7 @@ export const createUser = async (
       password: hash,
     });
 
-    const userWithoutPassword = newUser.toObject();
-    delete userWithoutPassword.password;
-
+    const { password: _pw, ...userWithoutPassword } = newUser.toObject();
     res.status(201).json(userWithoutPassword);
   } catch (err: any) {
     if (err.code === 11000) {
@@ -121,7 +122,7 @@ export const login = async (
 };
 
 export const updateProfile = async (
-  req: Request,
+  req: AuthedRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -147,7 +148,7 @@ export const updateProfile = async (
 };
 
 export const updateAvatar = async (
-  req: Request,
+  req: AuthedRequest,
   res: Response,
   next: NextFunction
 ) => {
